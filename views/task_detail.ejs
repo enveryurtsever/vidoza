@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('partials/head', { title: task.name }) %>
+</head>
+
+<body>
+  <%- include('partials/sidebar', { activePage: 'tasks' }) %>
+
+    <div class="main">
+      <div class="topbar" style="justify-content: space-between;">
+        <div class="breadcrumb">
+          <a href="/tasks">Tasks</a> <span>/</span> <span style="color:#e2e8f0;font-weight:600;">
+            <%= task.name %>
+          </span>
+        </div>
+        <button class="btn btn-secondary" onclick="openModal('editTaskModal')">Edit Task Settings</button>
+      </div>
+      <div class="content">
+        <!-- Edit Task Modal -->
+        <div id="editTaskModal" class="modal">
+          <div class="modal-content" style="max-width: 800px;">
+            <span class="close-btn" onclick="closeModal('editTaskModal')">&times;</span>
+            <h3 style="margin-bottom: 24px;">Edit Task Settings</h3>
+            <form method="POST" action="/task/<%= task.id %>/update">
+              <div class="form-grid" style="margin-bottom:16px;">
+                <div class="form-group">
+                  <label>Task Name</label>
+                  <input type="text" name="name" value="<%= task.name %>" required>
+                </div>
+                <div class="form-group">
+                  <label>Theme</label>
+                  <input type="text" name="theme" value="<%= task.theme || '' %>"
+                    placeholder="e.g. Videos about America">
+                </div>
+              </div>
+              <div class="form-grid-4" style="margin-bottom:16px;">
+                <div class="form-group">
+                  <label>Language</label>
+                  <select name="language" id="langSelect">
+                    <% Object.entries(languages).forEach(([code, lang])=> { %>
+                      <option value="<%= code %>" <%=task.language===code ? 'selected' : '' %>><%= lang.label %>
+                      </option>
+                      <% }) %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Voice</label>
+                  <select name="voice" id="voiceSelect"></select>
+                </div>
+                <div class="form-group">
+                  <label>Duration</label>
+                  <select name="duration_preset">
+                    <% Object.entries(durationPresets).forEach(([key, preset])=> { %>
+                      <option value="<%= key %>" <%=task.duration_preset===key ? 'selected' : '' %>><%= preset.label %>
+                      </option>
+                      <% }) %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Orientation</label>
+                  <select name="orientation">
+                    <option value="vertical" <%=task.orientation==='vertical' ? 'selected' : '' %>>Vertical (9:16)
+                    </option>
+                    <option value="horizontal" <%=task.orientation==='horizontal' ? 'selected' : '' %>>Horizontal (16:9)
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="checkbox-row" style="margin-bottom:8px;">
+                <div class="checkbox-item">
+                  <input type="checkbox" name="use_subtitles" value="1" <%=task.use_subtitles ? 'checked' : '' %>>
+                  <label style="color: #fff">Subtitles</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="use_tts" value="1" <%=task.use_tts ? 'checked' : '' %>>
+                  <label style="color: #fff">Text-to-Speech</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="use_bgmusic" value="1" <%=task.use_bgmusic ? 'checked' : '' %>>
+                  <label style="color: #fff">Background Music</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="use_outro" id="useOutro" value="1" <%=task.use_outro ? 'checked' : '' %>>
+                  <label style="color: #fff">Outro</label>
+                </div>
+              </div>
+              <div id="outroOptions" class="outro-row">
+                <div class="form-group">
+                  <label>Outro Video</label>
+                  <select name="outro_video">
+                    <% outroFiles.forEach(f=> { %>
+                      <option value="<%= f %>" <%=task.outro_video===f ? 'selected' : '' %>><%= f %>
+                      </option>
+                      <% }) %>
+                        <% if (!outroFiles.length) { %>
+                          <option value="" disabled>No videos in outro folder</option>
+                          <% } %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Outro Text</label>
+                  <input type="text" name="outro_text" value="<%= task.outro_text || '' %>"
+                    placeholder="e.g. Subscribe to our channel!">
+                </div>
+              </div>
+              <div class="form-actions" style="justify-content: space-between;">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+              </div>
+            </form>
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05);">
+              <form action="/task/<%= task.id %>/delete" method="POST"
+                data-confirm="This will delete the task and all its jobs. Are you sure?" data-danger>
+                <button type="submit" class="btn btn-danger" style="width: 100%;">Delete Task Permanently</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Create Job Modal -->
+        <div id="createJobModal" class="modal">
+          <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('createJobModal')">&times;</span>
+            <h3 style="margin-bottom: 24px;">Add New Job</h3>
+            <form method="POST" action="/task/<%= task.id %>/job">
+              <div class="form-group" style="margin-bottom:16px;">
+                <label>Content Text</label>
+                <textarea name="news_text" placeholder="Paste news, article, tweet, or any content here..." required
+                  minlength="10" rows="6"></textarea>
+                <small style="opacity: 0.6; display: block; margin-top: 8px;">
+                  <i data-lucide="lightbulb" class="icon" style="width: 14px; height: 14px; color: #fbbf24;"></i> <strong>Tip:</strong> Use <code>##</code> (double hash) to separate multiple news items for bulk
+                  creation.
+                </small>
+              </div>
+              <div class="form-actions" style="border-top:none;padding-top:0;margin-top:0;">
+                <button type="submit" class="btn btn-success">Create Job</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Jobs List -->
+        <div class="section">
+          <div class="section-header">
+            <h3>Jobs (<%= jobs.length %>)</h3>
+            <button class="btn btn-success" onclick="openModal('createJobModal')">
+              <i data-lucide="plus" class="icon"></i> Add Job
+            </button>
+          </div>
+          <div class="card">
+            <% if (jobs.length) { %>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Content</th>
+                      <th>Title</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% jobs.forEach(job=> { %>
+                      <tr>
+                        <td>
+                          <%= job.id %>
+                        </td>
+                        <td class="text-preview">
+                          <%= job.news_text.substring(0, 60) %>
+                        </td>
+                        <td class="text-preview">
+                          <%= job.video_title || '-' %>
+                        </td>
+                        <td><span class="status status-<%= job.status %>">
+                            <%= job.status %>
+                          </span></td>
+                        <td class="text-muted">
+                          <%= job.created_at ? job.created_at.substring(0, 16) : '-' %>
+                        </td>
+                        <td><a class="link" href="/job/<%= job.id %>">Details &rarr;</a></td>
+                      </tr>
+                      <% }) %>
+                  </tbody>
+                </table>
+              </div>
+              <% } else { %>
+                <div class="empty">No jobs added yet. Paste content above to create one.</div>
+                <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script id="langDataJson" type="application/json"><%- JSON.stringify(languages) %></script>
+    <script>
+      const langData = JSON.parse(document.getElementById('langDataJson').textContent);
+      const langSelect = document.getElementById('langSelect');
+      const voiceSelect = document.getElementById('voiceSelect');
+      const savedVoice = '<%= task.voice || "" %>';
+
+      function updateVoices() {
+        const lang = langData[langSelect.value];
+        voiceSelect.innerHTML = '';
+        if (lang && lang.voices) {
+          lang.voices.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.id;
+            opt.textContent = v.label;
+            if (v.id === savedVoice) opt.selected = true;
+            voiceSelect.appendChild(opt);
+          });
+        }
+      }
+      langSelect.addEventListener('change', updateVoices);
+      updateVoices();
+
+      const useOutro = document.getElementById('useOutro');
+      const outroOptions = document.getElementById('outroOptions');
+      function toggleOutro() {
+        outroOptions.style.display = useOutro.checked ? 'grid' : 'none';
+      }
+      useOutro.addEventListener('change', toggleOutro);
+      toggleOutro();
+    </script>
+    <script src="/js/ui.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,31 @@
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <h1>AutoShorts</h1>
+        <span>Video Automation</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/" class="<%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">
+            <i data-lucide="layout-dashboard" class="icon"></i> Dashboard
+        </a>
+        <a href="/tasks" class="<%= typeof activePage !== 'undefined' && activePage === 'tasks' ? 'active' : '' %>">
+            <i data-lucide="list-todo" class="icon"></i> Tasks
+        </a>
+        <a href="/videos"
+            class="<%= typeof activePage !== 'undefined' && activePage === 'videos' ? 'active' : '' %>">
+            <i data-lucide="video" class="icon"></i> Videos
+        </a>
+        <a href="/schedule"
+            class="<%= typeof activePage !== 'undefined' && activePage === 'schedule' ? 'active' : '' %>">
+            <i data-lucide="calendar" class="icon"></i> Schedule
+        </a>
+        <a href="/settings"
+            class="<%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">
+            <i data-lucide="settings" class="icon"></i> Settings
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/logout">
+            <i data-lucide="log-out" class="icon"></i> Log Out
+        </a>
+    </div>
+</aside>

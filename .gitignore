@@ -1,0 +1,39 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Databases
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Output & Temporary
+output/
+temp/
+*.mp4
+*.jpg
+*.txt
+
+# Auth Tokens
+*_token.json
+youtube_credentials.json
+
+# Local AI / Editor Settings
+.claude/

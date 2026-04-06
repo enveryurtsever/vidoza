@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('partials/head', { title: 'Job #' + job.id }) %>
+</head>
+
+<body>
+  <%- include('partials/sidebar', { activePage: 'tasks' }) %>
+
+    <% const isPosted = scheduledPosts.some(p => p.status === 'posted'); %>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="breadcrumb">
+          <% if (task) { %>
+            <a href="/tasks">Tasks</a> <span class="sep">/</span>
+            <a href="/task/<%= task.id %>">
+              <%= task.name %>
+            </a> <span class="sep">/</span>
+            <span class="current">Job #<%= job.id %></span>
+            <% } else { %>
+              <a href="/">Dashboard</a> <span class="sep">/</span>
+              <span class="current">Job #<%= job.id %></span>
+              <% } %>
+        </div>
+      </div>
+      <div class="content">
+        
+        <% if (isPosted) { %>
+          <div class="section">
+            <div class="card" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2);">
+              <div class="card-body" style="display: flex; align-items: center; gap: 12px; color: #10b981;">
+                <i data-lucide="lock" style="width: 20px; height: 20px;"></i>
+                <div style="font-weight: 600;">This job is locked because it has been posted to social media.</div>
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <div class="section">
+          <div class="section-header">
+            <h3>Job Info<% if (job.video_title) { %> &mdash; <%= job.video_title %>
+                  <% } %>
+            </h3>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="label">Status</div>
+                  <div class="value"><span class="status status-<%= job.status %>">
+                      <%= job.status %>
+                    </span></div>
+                </div>
+                <div class="info-item">
+                  <div class="label">Language</div>
+                  <div class="value">
+                    <%= (typeof settings !=='undefined' && settings.language) ? settings.language : (job.language
+                      || 'tr' ) %>
+                      <% if (task && !job.language) { %><span class="badge-info">from task</span>
+                        <% } %>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="label">Voice</div>
+                  <div class="value">
+                    <%= (typeof settings !=='undefined' && settings.voice) ? settings.voice : (job.voice || '-' ) %>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="label">Duration</div>
+                  <div class="value">
+                    <%= (typeof settings !=='undefined' && settings.duration_preset) ? settings.duration_preset :
+                      (job.duration_preset || '-' ) %>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="label">Orientation</div>
+                  <div class="value">
+                    <%= (typeof settings !=='undefined' && settings.orientation) ? (settings.orientation==='horizontal'
+                      ? 'Horizontal' : 'Vertical' ) : 'Vertical' %>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="label">Created</div>
+                  <div class="value">
+                    <%= job.created_at || '-' %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <% if (scheduledPosts.length > 0) { %>
+          <div class="section">
+            <div class="section-header">
+              <h3>Social Posts</h3>
+            </div>
+            <div class="card">
+              <div class="card-body" style="padding: 0;">
+                <table class="table" style="margin: 0;">
+                  <thead>
+                    <tr>
+                      <th>Account</th>
+                      <th>Platform</th>
+                      <th>Status</th>
+                      <th>Link / ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% scheduledPosts.forEach(post => { %>
+                      <tr>
+                        <td><strong><%= post.account_name %></strong></td>
+                        <td><span class="badge"><%= post.provider %></span></td>
+                        <td>
+                          <span class="status status-<%= post.status %>">
+                            <%= post.status %>
+                          </span>
+                        </td>
+                        <td>
+                          <% if (post.platform_url) { %>
+                            <a href="<%= post.platform_url %>" target="_blank" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;">
+                              <i data-lucide="external-link" class="icon" style="width: 14px; height: 14px;"></i> View Post
+                            </a>
+                          <% } else if (post.platform_job_id) { %>
+                            <code style="font-size: 11px;"><%= post.platform_job_id %></code>
+                          <% } else { %>
+                            -
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- Progress (Always on top if active) -->
+        <div class="section" id="progressCard" style="display: none;">
+          <div class="section-header">
+            <h3>Processing</h3>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 24px;">
+                <div class="progress-bar-bg" style="flex: 1; margin: 0;">
+                  <div class="progress-bar-fill" id="progressFill" style="width: 0%">
+                    <span class="progress-bar-text" id="progressPercent">0%</span>
+                  </div>
+                </div>
+                <% if (['processing', 'pending' ].includes(job.status)) { %>
+                  <form action="/job/<%= job.id %>/cancel" method="POST" style="margin: 0;"
+                    data-confirm="Are you sure you want to cancel this job?" data-danger>
+                    <button type="submit" class="btn btn-danger" style="padding: 8px 16px; font-size: 13px;">
+                      <i data-lucide="ban" class="icon"></i> Cancel Job
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+              <div class="steps">
+                <div class="step" data-step="script">Script</div>
+                <div class="step" data-step="keywords">Keywords</div>
+                <div class="step" data-step="meta">Meta</div>
+                <div class="step" data-step="tts">TTS</div>
+                <div class="step" data-step="media">Media</div>
+                <div class="step" data-step="video">Video</div>
+                <div class="step" data-step="thumbnail">Thumb</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Failed Job Action -->
+        <% if (job.status === 'failed') { %>
+          <div class="section">
+            <div class="card" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15);">
+              <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                <div>
+                  <h4 style="color: #f87171; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="alert-circle" class="icon"></i>
+                    Job Execution Failed
+                  </h4>
+                  <p style="font-size: 14px; color: #94a3b8;">The process stopped due to an error. You can review the details below and try regenerating.</p>
+                </div>
+                <form action="/job/<%= job.id %>/regenerate" method="POST" data-confirm="Are you sure you want to restart this job?">
+                  <button type="submit" class="btn btn-primary" <%= isPosted ? 'disabled' : '' %>>
+                    <i data-lucide="refresh-cw" class="icon"></i> Regenerate Job
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <div class="job-grid">
+          <!-- Left: Edit (4) -->
+          <div class="edit-side">
+            <% if (job.status !=='processing' && job.status !=='pending' ) { %>
+              <div class="section">
+                <div class="section-header">
+                  <h3>Edit Settings</h3>
+                </div>
+                <div class="card">
+                  <div class="card-body">
+                    <form method="POST" action="/job/<%= job.id %>/update">
+                      <div class="form-group">
+                        <label>Script (AI generated)</label>
+                        <textarea name="script_text" rows="8" <%= isPosted ? 'disabled' : '' %>><%= job.script_text || '' %></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label>Keywords (comma separated)</label>
+                        <input type="text" name="keywords" value="<%= job.keywords || '' %>"
+                          placeholder="immigration, usa, visa" <%= isPosted ? 'disabled' : '' %>>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Language override</label>
+                        <select name="language" <%= isPosted ? 'disabled' : '' %>>
+                          <option value="">-- Inherit --</option>
+                          <% Object.entries(languages).forEach(([code, lang])=> { %>
+                            <option value="<%= code %>" <%=job.language===code ? 'selected' : '' %>><%= lang.label %>
+                            </option>
+                            <% }) %>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Voice override</label>
+                        <select name="voice" id="jobVoiceSelect" <%= isPosted ? 'disabled' : '' %>>
+                          <option value="">-- Inherit --</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Duration override</label>
+                        <select name="duration_preset" <%= isPosted ? 'disabled' : '' %>>
+                          <option value="">-- Inherit --</option>
+                          <% Object.entries(durationPresets).forEach(([key, preset])=> { %>
+                            <option value="<%= key %>" <%=job.duration_preset===key ? 'selected' : '' %>><%=
+                                preset.label %>
+                            </option>
+                            <% }) %>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Orientation override</label>
+                        <select name="orientation" <%= isPosted ? 'disabled' : '' %>>
+                          <option value="">-- Same as task --</option>
+                          <option value="vertical" <%=job.orientation==='vertical' ? 'selected' : '' %>>Vertical
+                          </option>
+                          <option value="horizontal" <%=job.orientation==='horizontal' ? 'selected' : '' %>>Horizontal
+                          </option>
+                        </select>
+                      </div>
+
+                      <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;" <%= isPosted ? 'disabled' : '' %>>
+                          <%= isPosted ? 'Locked' : 'Save All Changes' %>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <% } %>
+
+                <!-- Original Text -->
+                <div class="section">
+                  <div class="section-header">
+                    <h3>Original Text</h3>
+                  </div>
+                  <div class="card">
+                    <div class="card-body">
+                      <p class="news-text">
+                        <%= job.news_text %>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+          </div>
+
+          <!-- Right: Video & Content (8) -->
+          <div class="main-side">
+            <!-- Video -->
+            <% if (job.video_path) { %>
+              <div class="section">
+                <div class="section-header">
+                  <h3>Video</h3>
+                </div>
+                <div class="card">
+                  <div class="card-body">
+                    <video controls style="width:100%; border-radius:8px;">
+                      <source src="/video/<%= job.id %>" type="video/mp4">
+                    </video>
+
+                    <!-- Video Actions -->
+                    <div class="video-actions">
+                      <% if (job.status !=='processing' && job.status !=='pending' ) { %>
+                        <% if (job.status !=='ready' ) { %>
+                          <form action="/job/<%= job.id %>/approve" method="POST">
+                            <button type="submit" class="btn btn-success" <%= isPosted ? 'disabled' : '' %>>
+                              <i data-lucide="check-circle" class="icon"></i> Set to Ready
+                            </button>
+                          </form>
+                          <% } %>
+                            <form action="/job/<%= job.id %>/regenerate" method="POST"
+                               data-confirm="This will delete the current video and start over. Continue?">
+                              <button type="submit" class="btn btn-warning" <%= isPosted ? 'disabled' : '' %>>
+                                <i data-lucide="refresh-cw" class="icon"></i> Regenerate
+                              </button>
+                            </form>
+                            <% } %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <% } %>
+
+                <!-- Error -->
+                <% if (job.error) { %>
+                  <div class="section">
+                    <div class="section-header">
+                      <h3>Error</h3>
+                    </div>
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="error-box">
+                          <%= job.error %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Data Injection for JS -->
+    <div id="jobData" data-job-id="<%= job.id %>" data-job-step="<%= job.step || '' %>"
+      data-job-status="<%= job.status %>"
+      data-job-lang="<%= (typeof settings !== 'undefined' && settings.language) ? settings.language : (job.language || '') %>"
+      data-job-voice="<%= job.voice || '' %>" data-job-progress="<%= job.step_progress || 0 %>" style="display: none;">
+    </div>
+
+    <script id="langDataJson" type="application/json"><%- JSON.stringify(languages) %></script>
+
+    <script>
+      const jobDataEl = document.getElementById('jobData');
+      const jobId = parseInt(jobDataEl.dataset.jobId, 10);
+      const jobStatus = jobDataEl.dataset.jobStatus;
+      const initialStep = jobDataEl.dataset.jobStep;
+      const initialProgress = jobDataEl.dataset.jobProgress || 0;
+
+      // Initial progress card state
+      if (['processing', 'pending'].includes(jobStatus)) {
+        document.getElementById('progressCard').style.display = 'block';
+        document.getElementById('progressFill').style.width = initialProgress + '%';
+        document.getElementById('progressPercent').textContent = initialProgress + '%';
+      }
+
+      const stepOrder = ['script', 'keywords', 'meta', 'tts', 'media', 'video', 'thumbnail', 'done'];
+
+      function updateSteps(currentStep) {
+        const steps = document.querySelectorAll('.step');
+        const currentIdx = stepOrder.indexOf(currentStep);
+        steps.forEach(el => {
+          const stepIdx = stepOrder.indexOf(el.dataset.step);
+          el.classList.remove('active', 'done');
+          if (stepIdx < currentIdx) el.classList.add('done');
+          else if (stepIdx === currentIdx) el.classList.add('active');
+        });
+      }
+      updateSteps(initialStep);
+
+      if (['processing', 'pending'].includes(jobStatus)) {
+        const pollInterval = setInterval(async () => {
+          try {
+            const res = await fetch('/api/job/' + jobId + '/status');
+            const data = await res.json();
+            document.getElementById('progressFill').style.width = data.step_progress + '%';
+            document.getElementById('progressPercent').textContent = data.step_progress + '%';
+            updateSteps(data.step || '');
+            if (data.status !== 'processing' && data.status !== 'pending') {
+              clearInterval(pollInterval);
+              setTimeout(() => location.reload(), 1000);
+            }
+          } catch (e) { console.error('Poll error:', e); }
+        }, 2000);
+      }
+
+      // Voice select populate
+      const langDataRaw = document.getElementById('langDataJson').textContent;
+      if (langDataRaw) {
+        const langData = JSON.parse(langDataRaw);
+        const jobLang = jobDataEl.dataset.jobLang;
+        const jobVoice = jobDataEl.dataset.jobVoice;
+        const voiceSelect = document.getElementById('jobVoiceSelect');
+        if (voiceSelect) {
+          const lang = langData[jobLang];
+          if (lang && lang.voices) {
+            lang.voices.forEach(v => {
+              const opt = document.createElement('option');
+              opt.value = v.id;
+              opt.textContent = v.label;
+              if (v.id === jobVoice) opt.selected = true;
+              voiceSelect.appendChild(opt);
+            });
+          }
+        }
+      }
+    </script>
+    <script src="/js/ui.js"></script>
+</body>
+
+</html>

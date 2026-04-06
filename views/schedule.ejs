@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head', { title: 'Schedule' }) %>
+        <link rel="stylesheet" href="/css/calendar.css">
+</head>
+
+<body>
+    <%- include('partials/sidebar', { activePage: 'schedule' }) %>
+
+        <div class="main">
+            <div class="topbar">
+                <h2>Content Schedule</h2>
+                <div class="stats-mini">
+                    <span class="badge" id="totalScheduled">0 Posts</span>
+                </div>
+            </div>
+            <div class="content">
+
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <div class="month-nav">
+                            <button class="btn btn-secondary btn-sm" onclick="changeMonth(-1)">
+                                <i data-lucide="chevron-left" class="icon"></i>
+                            </button>
+                            <div class="current-month" id="monthDisplay">Month Year</div>
+                            <button class="btn btn-secondary btn-sm" onclick="changeMonth(1)">
+                                <i data-lucide="chevron-right" class="icon"></i>
+                            </button>
+                        </div>
+                        <button class="btn btn-primary" onclick="openAddModal()">
+                            <i data-lucide="plus" class="icon"></i> New Schedule
+                        </button>
+                    </div>
+
+                    <div class="calendar-grid" id="calendarGrid">
+                        <div class="weekday">Sun</div>
+                        <div class="weekday">Mon</div>
+                        <div class="weekday">Tue</div>
+                        <div class="weekday">Wed</div>
+                        <div class="weekday">Thu</div>
+                        <div class="weekday">Fri</div>
+                        <div class="weekday">Sat</div>
+                        <!-- Days injected here -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Add Schedule Modal -->
+        <div id="addModal" class="modal">
+            <div class="modal-content modal-800">
+                <span class="close-btn" onclick="closeModal('addModal')">&times;</span>
+                <h3 class="mb-20">Schedule Video</h3>
+
+                <% 
+                    const nowPlus70 = new Date(Date.now() + 70 * 60000);
+                    const defaultDate = nowPlus70.toISOString().split('T')[0];
+                    const defaultTime = nowPlus70.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+                %>
+                <form id="scheduleForm" onsubmit="handleCreate(event)">
+                    <div class="grid-2-col">
+                        <div class="form-group">
+                            <label>Target Date</label>
+                            <input type="date" id="targetDate" class="form-control" required
+                                value="<%= defaultDate %>"
+                                min="<%= new Date().toISOString().split('T')[0] %>">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Time</label>
+                            <input type="time" id="targetTime" class="form-control" value="<%= defaultTime %>" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-16">
+                        <label>Select Accounts</label>
+                        <div class="channel-selector">
+                            <% connections.forEach(conn=> { %>
+                                <label class="channel-option">
+                                    <input type="checkbox" name="targetAccounts" value="<%= conn.id %>">
+                                    <span class="platform-tag tag-<%= conn.provider %>">
+                                        <%= conn.provider %>
+                                    </span>
+                                    <strong>
+                                        <%= conn.account_name %>
+                                    </strong>
+                                </label>
+                                <% }) %>
+                                    <% if (!connections.length) { %>
+                                        <p class="text-muted">No accounts connected.</p>
+                                        <% } %>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-24">
+                        <label>Select Video (Unscheduled Ready Content)</label>
+                        <div class="video-select-carousel" id="videoCarousel">
+                            <% readyJobs.forEach(job=> { %>
+                                <div class="video-card" onclick="selectVideo('<%= job.id %>')" id="video-<%= job.id %>">
+                                    <img src="<%= job.thumbUrl %>" class="video-thumb" alt="thumb"
+                                        onerror="this.src='https://placehold.co/140x248?text=No+Thumb'">
+                                    <div class="video-info">
+                                        <div class="video-title-card">
+                                            <%= job.video_title || `Job #${job.id}` %>
+                                        </div>
+                                        <div class="video-meta-card">Lang: <%= job.language %> | ID: <%= job.id %>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% }) %>
+                                    <% if (!readyJobs.length) { %>
+                                        <div class="no-videos-message text-muted">
+                                            No available videos to schedule.
+                                        </div>
+                                        <% } %>
+                        </div>
+                        <input type="hidden" id="targetJobId" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-polished">Schedule Content</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit/Delete Modal -->
+        <div id="editModal" class="modal">
+            <div class="modal-content modal-400">
+                <span class="close-btn" onclick="closeModal('editModal')">&times;</span>
+                <h3 id="editTitle" class="mb-12">Edit Schedule</h3>
+                <p id="editSubtitle" class="text-muted small mb-20"></p>
+
+                <input type="hidden" id="editId">
+                <div class="form-group mb-16">
+                    <label>New Date & Time</label>
+                    <input type="datetime-local" id="editDatetime" class="form-control" required
+                        min="<%= new Date().toISOString().substring(0, 16) %>">
+                </div>
+
+                <div class="form-actions gap-12">
+                    <button class="btn btn-outline-danger flex-1" onclick="handleDelete()">Delete</button>
+                    <button class="btn btn-primary flex-2" onclick="handleUpdate()">Update</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Alert Modal -->
+        <div id="alertModal" class="modal">
+            <div class="modal-content">
+                <h4 id="alertTitle">Notification</h4>
+                <p id="alertMessage"></p>
+                <div class="form-actions">
+                    <button class="btn btn-primary w-100" onclick="closeModal('alertModal')">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/js/ui.js"></script>
+        <script src="/js/calendar.js"></script>
+</body>
+
+</html>

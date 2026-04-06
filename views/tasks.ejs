@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('partials/head', { title: 'Tasks' }) %>
+</head>
+
+<body>
+  <%- include('partials/sidebar', { activePage: 'tasks' }) %>
+
+    <div class="main">
+      <div class="topbar" style="justify-content: space-between;">
+        <h2>Tasks</h2>
+        <button class="btn btn-primary" onclick="openModal('createTaskModal')">
+          <i data-lucide="plus-circle" class="icon"></i> Create New Task
+        </button>
+      </div>
+      <div class="content">
+
+        <!-- Create Task Modal -->
+        <div id="createTaskModal" class="modal">
+          <div class="modal-content modal-lg">
+            <span class="close-btn" onclick="closeModal('createTaskModal')">&times;</span>
+            <h3 style="margin-bottom: 24px;">Create New Task</h3>
+            <form method="POST" action="/task/create">
+              <div class="form-grid" style="margin-bottom:16px;">
+                <div class="form-group">
+                  <label>Task Name</label>
+                  <input type="text" name="name" placeholder="e.g. Immigration News" required>
+                </div>
+                <div class="form-group">
+                  <label>Theme (for visual selection)</label>
+                  <input type="text" name="theme" placeholder="e.g. Videos about America">
+                </div>
+              </div>
+              <div class="form-grid-4" style="margin-bottom:16px;">
+                <div class="form-group">
+                  <label>Language</label>
+                  <select name="language" id="langSelect">
+                    <% Object.entries(languages).forEach(([code, lang])=> { %>
+                      <option value="<%= code %>">
+                        <%= lang.label %>
+                      </option>
+                      <% }) %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Voice</label>
+                  <select name="voice" id="voiceSelect"></select>
+                </div>
+                <div class="form-group">
+                  <label>Duration</label>
+                  <select name="duration_preset">
+                    <% Object.entries(durationPresets).forEach(([key, preset])=> { %>
+                      <option value="<%= key %>" <%=key==='30-60s' ? 'selected' : '' %>><%= preset.label %>
+                      </option>
+                      <% }) %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Orientation</label>
+                  <select name="orientation">
+                    <option value="vertical">Vertical (9:16)</option>
+                    <option value="horizontal">Horizontal (16:9)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="checkbox-row" style="margin-bottom:8px;">
+                <div class="checkbox-item">
+                  <input type="checkbox" name="use_subtitles" id="useSubtitles" value="1" checked>
+                  <label for="useSubtitles">Subtitles</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="use_tts" id="useTts" value="1" checked>
+                  <label for="useTts">Text-to-Speech</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="use_bgmusic" id="useBgMusic" value="1" checked>
+                  <label for="useBgMusic">Background Audio</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" name="use_outro" id="useOutro" value="1" checked>
+                  <label for="useOutro">Outro</label>
+                </div>
+              </div>
+              <div id="outroOptions" class="outro-row">
+                <div class="form-group">
+                  <label>Outro Video</label>
+                  <select name="outro_video">
+                    <% outroFiles.forEach(f=> { %>
+                      <option value="<%= f %>">
+                        <%= f %>
+                      </option>
+                      <% }) %>
+                        <% if (!outroFiles.length) { %>
+                          <option value="" disabled>No videos in outro folder</option>
+                          <% } %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Outro Text</label>
+                  <input type="text" name="outro_text" placeholder="e.g. Subscribe to our channel!">
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save & Create</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tasks Table -->
+        <div class="section">
+          <div class="section-header">
+            <h3>All Tasks</h3>
+          </div>
+          <div class="card">
+            <% if (tasks.length) { %>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Name</th>
+                      <th>Theme</th>
+                      <th>Language</th>
+                      <th>Orientation</th>
+                      <th>Jobs</th>
+                      <th>Created</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% tasks.forEach(task=> { %>
+                      <tr>
+                        <td>
+                          <%= task.id %>
+                        </td>
+                        <td><a class="link" href="/task/<%= task.id %>">
+                            <%= task.name %>
+                          </a></td>
+                        <td>
+                          <% if (task.theme) { %><span class="theme-tag">
+                              <%= task.theme %>
+                            </span>
+                            <% } else { %>-<% } %>
+                        </td>
+                        <td>
+                          <%= (languages[task.language] || {}).label || task.language %>
+                        </td>
+                        <td><span class="badge">
+                            <%= task.orientation==='horizontal' ? 'Horizontal' : 'Vertical' %>
+                          </span></td>
+                        <td><span class="badge">
+                            <%= jobCounts[task.id] || 0 %>
+                          </span></td>
+                        <td class="text-muted">
+                          <%= task.created_at ? task.created_at.substring(0, 16) : '-' %>
+                        </td>
+                        <td><a class="link" href="/task/<%= task.id %>" style="display: flex; align-items: center; gap: 4px;">
+                            Details <i data-lucide="arrow-right" class="icon" style="width: 14px; height: 14px;"></i>
+                        </a></td>
+                      </tr>
+                      <% }) %>
+                  </tbody>
+                </table>
+              </div>
+              <% } else { %>
+                <div class="empty">No tasks created yet.</div>
+                <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/ui.js"></script>
+    <script id="langDataJson" type="application/json"><%- JSON.stringify(languages) %></script>
+    <script>
+      const langData = JSON.parse(document.getElementById('langDataJson').textContent);
+      const langSelect = document.getElementById('langSelect');
+      const voiceSelect = document.getElementById('voiceSelect');
+
+      function updateVoices() {
+        const lang = langData[langSelect.value];
+        voiceSelect.innerHTML = '';
+        if (lang && lang.voices) {
+          lang.voices.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.id;
+            opt.textContent = v.label;
+            voiceSelect.appendChild(opt);
+          });
+        }
+      }
+      langSelect.addEventListener('change', updateVoices);
+      updateVoices();
+
+      const useOutro = document.getElementById('useOutro');
+      const outroOptions = document.getElementById('outroOptions');
+      function toggleOutro() {
+        outroOptions.style.display = useOutro.checked ? 'grid' : 'none';
+      }
+      useOutro.addEventListener('change', toggleOutro);
+      toggleOutro();
+    </script>
+</body>
+
+</html>

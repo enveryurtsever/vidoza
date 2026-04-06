@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head', { title: 'Videos' }) %>
+</head>
+
+<body>
+    <%- include('partials/sidebar', { activePage: 'videos' }) %>
+
+        <div class="main">
+            <div class="topbar">
+                <h2>Videos</h2>
+            </div>
+            <div class="content">
+                <!-- Filters -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-body">
+                        <form method="GET" action="/videos" class="filter-form" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                            <div class="form-group" style="margin-bottom: 0; min-width: 200px;">
+                                <label style="margin-bottom: 5px; display: block; font-size: 13px; font-weight: 600;">Channel (Task)</label>
+                                <select name="task_id" class="form-control" onchange="this.form.submit()">
+                                    <option value="">All Channels</option>
+                                    <% tasks.forEach(task => { %>
+                                        <option value="<%= task.id %>" <%= currentFilters.task_id == task.id ? 'selected' : '' %>><%= task.name %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
+                                <label style="margin-bottom: 5px; display: block; font-size: 13px; font-weight: 600;">Status</label>
+                                <select name="status" class="form-control" onchange="this.form.submit()">
+                                    <option value="all" <%= currentFilters.status == 'all' ? 'selected' : '' %>>All Statuses</option>
+                                    <option value="pending" <%= currentFilters.status == 'pending' ? 'selected' : '' %>>Pending</option>
+                                    <option value="processing" <%= currentFilters.status == 'processing' ? 'selected' : '' %>>Processing</option>
+                                    <option value="ready" <%= currentFilters.status == 'ready' ? 'selected' : '' %>>Ready</option>
+                                    <option value="posted" <%= currentFilters.status == 'posted' ? 'selected' : '' %>>Posted</option>
+                                    <option value="failed" <%= currentFilters.status == 'failed' ? 'selected' : '' %>>Failed</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <a href="/videos" class="btn btn-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <% if (jobs.length> 0) { %>
+                    <div class="grid">
+                        <% jobs.forEach(job=> { %>
+                            <div class="video-card">
+                                <a href="/job/<%= job.id %>" class="video-preview-link">
+                                    <div class="video-preview">
+                                        <img src="<%= job.thumbUrl %>" alt="Thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <div class="play-overlay">
+                                            <i data-lucide="play" class="icon" style="width: 48px; height: 48px;"></i>
+                                        </div>
+                                        <% if (job.status !== 'approved') { %>
+                                            <div class="status-badge status-<%= job.status %>" style="position: absolute; top: 10px; right: 10px;">
+                                                <%= job.status.toUpperCase() %>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                </a>
+                                <div class="video-info">
+                                    <div class="video-title">
+                                        <%= job.video_title || `Job #${job.id}` %>
+                                    </div>
+                                    <div class="video-meta">
+                                        <%= job.created_at ? job.created_at.substring(0, 10) : '-' %> • <%= (job.language || 'tr').toUpperCase() %>
+                                    </div>
+                                </div>
+                                <div class="video-actions">
+                                    <a href="/job/<%= job.id %>" class="btn btn-secondary">Details</a>
+                                    <% if (job.status === 'failed') { %>
+                                        <form action="/job/<%= job.id %>/regenerate" method="POST" data-confirm="Are you sure you want to regenerate this video?" style="width: 100%;">
+                                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                                <i data-lucide="refresh-cw" class="icon"></i>
+                                                Regenerate
+                                            </button>
+                                        </form>
+                                    <% } else if (job.scheduledPosts && job.scheduledPosts.length > 0) { 
+                                        const isPosted = job.status === 'posted';
+                                        const latestPost = job.scheduledPosts.find(p => p.status === 'posted') || job.scheduledPosts[0];
+                                        const displayDate = (isPosted ? (latestPost.updated_at || latestPost.publish_datetime) : latestPost.publish_datetime) || '';
+                                    %>
+                                        <div class="scheduled-info" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(52, 211, 153, 0.1); border-radius: 10px; border: 1px solid rgba(52, 211, 153, 0.2); padding: 5px;">
+                                            <span style="font-size: 10px; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">
+                                              <i data-lucide="<%= isPosted ? 'check-circle' : 'check' %>" class="icon" style="width: 12px; height: 12px;"></i> <%= isPosted ? 'Posted' : 'Scheduled' %>
+                                            </span>
+                                            <span style="font-size: 11px; color: #94a3b8; font-weight: 500;"><%= displayDate.substring(0, 16).replace('T', ' ') %></span>
+                                        </div>
+                                    <% } else if (['ready', 'posted'].includes(job.status)) { %>
+                                        <button onclick="openScheduleModal('<%= job.id %>')" class="btn btn-success">
+                                            <i data-lucide="calendar" class="icon" style="width: 16px; height: 16px; stroke-width: 2.5px;"></i>
+                                            Schedule
+                                        </button>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <% }) %>
+                    </div>
+                    <% } else { %>
+                        <div class="card">
+                            <div class="empty">
+                                <p>No ready jobs found.</p>
+                                <p style="margin-top: 8px; font-size: 12px;">Jobs marked as "Ready" will appear here
+                                    automatically.</p>
+                            </div>
+                        </div>
+                        <% } %>
+
+            </div>
+        </div>
+
+
+        <!-- Schedule Modal -->
+        <div id="scheduleModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeModal('scheduleModal')">&times;</span>
+                <h2 style="margin-bottom: 20px; font-size: 18px; display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="calendar"></i> Schedule Video
+                </h2>
+
+                <input type="hidden" id="scheduleJobId">
+
+                <div class="form-group">
+                    <label>Select Channel:</label>
+                    <select id="scheduleChannelId" class="form-control">
+                        <% if (connections && connections.length> 0) { %>
+                            <% connections.forEach(conn=> { %>
+                                <option value="<%= conn.id %>">[<%= conn.provider.toUpperCase() %>] <%=
+                                            conn.account_name %>
+                                </option>
+                                <% }) %>
+                                    <% } else { %>
+                                        <option value="">No accounts connected</option>
+                                        <% } %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Date & Time:</label>
+                    <input type="datetime-local" id="scheduleDatetime" class="form-control">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="submitSchedule()"
+                    <%=(!connections || connections.length===0) ? 'disabled' : '' %>>Confirm
+                    Schedule</button>
+            </div>
+        </div>
+
+        <script>
+            function openScheduleModal(jobId) {
+                document.getElementById("scheduleJobId").value = jobId;
+                document.getElementById("scheduleModal").style.display = "block";
+            }
+
+            function closeModal(modalId) {
+                document.getElementById(modalId).style.display = "none";
+            }
+
+            window.onclick = function (event) {
+                if (event.target.className === 'modal') {
+                    event.target.style.display = "none";
+                }
+            }
+
+
+            async function submitSchedule() {
+                const jobId = document.getElementById("scheduleJobId").value;
+                const accountId = document.getElementById("scheduleChannelId").value;
+                const publishDatetime = document.getElementById("scheduleDatetime").value;
+
+                if (!jobId || !accountId || !publishDatetime) {
+                    alert("Please ensure all fields are filled.");
+                    return;
+                }
+
+                try {
+                    const res = await fetch("/api/schedule/create", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ jobId, accountIds: [accountId], publishDatetime })
+                    });
+
+                    if (res.ok) {
+                        alert("✅ Successfully scheduled!");
+                        closeModal('scheduleModal');
+                    } else {
+                        const data = await res.json();
+                        alert("Error: " + (data.error || "Unknown"));
+                    }
+                } catch (err) {
+                    alert("Request failed: " + err.message);
+                }
+            }
+        </script>
+        <script src="/js/ui.js"></script>
+</body>
+
+</html>

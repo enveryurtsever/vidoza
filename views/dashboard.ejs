@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('partials/head', { title: 'Dashboard' }) %>
+</head>
+
+<body>
+  <%- include('partials/sidebar', { activePage: 'dashboard' }) %>
+
+    <div class="main">
+      <div class="topbar">
+        <h2>Dashboard</h2>
+      </div>
+      <div class="content">
+        <!-- Stats -->
+        <div class="stats">
+          <div class="stat-card">
+            <div class="label">Total Jobs</div>
+            <div class="number">
+              <%= stats.total %>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Completed</div>
+            <div class="number">
+              <%= stats.completed %>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Pending</div>
+            <div class="number">
+              <%= stats.pending %>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Failed</div>
+            <div class="number">
+              <%= stats.failed %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activities (Scheduled Posts) -->
+        <div class="section mb-24">
+          <div class="section-header">
+            <h3>Recent Distribution Activity (Last 10)</h3>
+          </div>
+          <div class="card">
+            <% if (recentActivities && recentActivities.length) { %>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Job ID</th>
+                      <th>Platform</th>
+                      <th>Account</th>
+                      <th>Status</th>
+                      <th>Scheduled Date</th>
+                      <th>Last Update</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% recentActivities.forEach(post=> { %>
+                      <tr>
+                        <td>
+                          <a class="link" href="/job/<%= post.job_id %>">#<%= post.job_id %></a>
+                        </td>
+                        <td>
+                          <span class="platform-tag tag-<%= post.account_provider %>">
+                            <%= post.account_provider %>
+                          </span>
+                        </td>
+                        <td>
+                          <%= post.account_name %>
+                        </td>
+                        <td>
+                          <span class="status status-<%= post.status %>">
+                            <%= post.status %>
+                          </span>
+                        </td>
+                        <td class="small text-muted">
+                          <%= post.publish_datetime ? post.publish_datetime.substring(0, 16) : '-' %>
+                        </td>
+                        <td class="small text-muted">
+                          <%= post.updated_at ? post.updated_at.substring(0, 16) : '-' %>
+                        </td>
+                      </tr>
+                      <% }) %>
+                  </tbody>
+                </table>
+              </div>
+              <% } else { %>
+                <div class="empty">No distribution activity yet.</div>
+                <% } %>
+          </div>
+        </div>
+
+        <!-- Recent Jobs -->
+        <div class="section">
+          <div class="section-header">
+            <h3>Recent Jobs</h3>
+          </div>
+          <div class="card">
+            <% if (recentJobs.length) { %>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Title</th>
+                      <th>Task</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% recentJobs.forEach(job=> { %>
+                      <tr>
+                        <td class="small">
+                          #<%= job.id %>
+                        </td>
+                        <td class="text-preview">
+                          <%= job.video_title || '-' %>
+                        </td>
+                        <td>
+                          <% if (job.task_id) { %>
+                            <a class="link" href="/task/<%= job.task_id %>">
+                              <%= job.task_name || 'Task #' + job.task_id %>
+                            </a>
+                            <% } else { %>
+                              <span class="text-muted">-</span>
+                            <% } %>
+                        </td>
+                        <td><span class="status status-<%= job.status %>">
+                            <%= job.status %>
+                          </span></td>
+                        <td class="text-muted">
+                          <%= job.created_at ? job.created_at.substring(0, 16) : '-' %>
+                        </td>
+                        <td><a class="link" href="/job/<%= job.id %>" style="display: flex; align-items: center; gap: 4px;">
+                            Details <i data-lucide="arrow-right" class="icon" style="width: 14px; height: 14px;"></i>
+                        </a></td>
+                      </tr>
+                      <% }) %>
+                  </tbody>
+                </table>
+              </div>
+              <% } else { %>
+                <div class="empty">No jobs yet. Create a task and add jobs to get started.</div>
+                <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="/js/ui.js"></script>
+</body>
+
+</html>

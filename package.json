@@ -1,7 +1,28 @@
 {
-  "name": "autoshorts",
+  "name": "vidoza",
   "version": "1.0.0",
-  "description": "Telegram haberlerinden otomatik short video üretici",
+  "description": "Open-source AI faceless short video generator and auto-poster for YouTube Shorts, TikTok, and Instagram Reels powered by Gemini AI, Remotion, FFmpeg, Edge TTS, and Telegram Bot.",
+  "homepage": "https://github.com/enveryurtsever/vidoza",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enveryurtsever/vidoza.git"
+  },
+  "keywords": [
+    "youtube-shorts",
+    "tiktok",
+    "instagram-reels",
+    "ai-video-generator",
+    "faceless-videos",
+    "short-video",
+    "remotion",
+    "ffmpeg",
+    "gemini-ai",
+    "edge-tts",
+    "telegram-bot",
+    "social-media-scheduler",
+    "video-automation",
+    "self-hosted"
+  ],
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

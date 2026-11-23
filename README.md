@@ -6,6 +6,7 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/github/license/enveryurtsever/vidoza?color=22c55e" alt="MIT License" />
   <img src="https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white" alt="Google Gemini AI" />
   <img src="https://img.shields.io/badge/Renderer-Remotion%20%2B%20FFmpeg-0B84F3?logo=ffmpeg&logoColor=white" alt="Remotion and FFmpeg" />
@@ -155,6 +156,14 @@ Vidoza ships with built-in neural voice presets via Edge TTS and can be easily e
 
 ---
 
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for our vulnerability reporting policy and deployment checklist.
+
 ## License
 
-Ensure you comply with the Terms of Service of all integrated third-party APIs (Google Gemini, YouTube, TikTok, Meta/Instagram, Pexels, Pixabay).
+Released under the [MIT License](LICENSE). Ensure you comply with the Terms of Service of all integrated third-party APIs (Google Gemini, YouTube, TikTok, Meta/Instagram, Pexels, Pixabay).

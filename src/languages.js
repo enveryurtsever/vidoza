@@ -2,7 +2,7 @@ const LANGUAGES = {
   tr: {
     label: "Turkce",
     name: "Turkish",
-    cta: "Daha fazlasi icin Immigro uygulamasini indirin!",
+    cta: "Daha fazlasi icin takip edin!",
     voices: [
       { id: "tr-TR-AhmetNeural", label: "Ahmet (Erkek)", gender: "male" },
       { id: "tr-TR-EmelNeural", label: "Emel (Kadin)", gender: "female" },
@@ -13,7 +13,7 @@ const LANGUAGES = {
   en: {
     label: "English",
     name: "English",
-    cta: "Download the Immigro app for more!",
+    cta: "Follow for more!",
     voices: [
       { id: "en-US-AndrewNeural", label: "Andrew (Male)", gender: "male" },
       { id: "en-US-JennyNeural", label: "Jenny (Female)", gender: "female" },
@@ -24,7 +24,7 @@ const LANGUAGES = {
   es: {
     label: "Espanol",
     name: "Spanish (Latin America)",
-    cta: "Descarga la app de Immigro para mas!",
+    cta: "Siguenos para mas!",
     voices: [
       { id: "es-MX-JorgeNeural", label: "Jorge (Hombre)", gender: "male" },
       { id: "es-MX-DaliaNeural", label: "Dalia (Mujer)", gender: "female" },
